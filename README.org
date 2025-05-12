@@ -1,0 +1,22 @@
+* === S E C U R E  - U S B ===
+This script creates a secure USB backup device for use on any computer.
+The script installs a minimal Linux OS to boot from, or alternatively mount the included storage partition on your personal  Linux computer.
+
+** Features
+- USB backup device
+- LUKS encryption
+- BTRFS storage partition
+- Linux OS included
+- Boot from included OS on any computer
+- Mount storage partition on personal computer
+- Encryption password is user password
+
+** Requirements
+- USB device (minimal 15GB)
+- Linux computer to execute this script
+
+** Partitioning
+1. README
+2. EFI
+3. LINUX_ENCRYPTED
+4. STORAGE_ENCRYPTED
