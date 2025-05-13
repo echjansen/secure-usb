@@ -1,9 +1,9 @@
 * === S E C U R E  - U S B ===
-This script creates a secure USB backup device for use on any computer.
+This script creates a Secure USB backup device for use on any computer.
 The script installs a minimal Linux OS to boot from, or alternatively mount the included storage partition on your personal  Linux computer.
 
 ** Features
-- USB backup device
+- Secure USB Backup device
 - LUKS encryption
 - BTRFS storage partition
 - Linux OS included
@@ -14,9 +14,39 @@ The script installs a minimal Linux OS to boot from, or alternatively mount the 
 ** Requirements
 - USB device (minimal 15GB)
 - Linux computer to execute this script
+- Internet connection to create the Secure USB
 
 ** Partitioning
 1. README
 2. EFI
-3. LINUX_ENCRYPTED
-4. STORAGE_ENCRYPTED
+3. LINUX
+4. STORAGE
+
+** Creating a Secure USB Backup device
+To create a secure USB backup device execute the following commands on a linux operating system, after inserting your USB device in the computer.
+
+#+begin_src shell
+  git clone https://github.com/echjansen/secure-usb
+  cd secure-usb
+  sudo secure-usb.py
+#+end_src
+
+The script will ask you the following questions:
+1. Select the correct USB device (do not make a mistake, as the content will be wiped)
+2. A user name
+3. A user and drive password (single login)
+4. A drive name (in case you create multiple secure USB backup devices)
+5. Option to wipe the USB drive with random data (can take a long time)
+
+** Using a Secure USB Backup device
+There are two options to use the Secure USB Backup device:
+
+1. Plugin the Secure USB Backup device and reboot the machine to boot from the USB device
+2. Mount the storage partition on your personal computer
+
+To mount the storage partition:
+
+#+begin_src shell
+  lsblk                           # To determine the correct drive. Storage is the 4th partition
+  sudo cryptsetup open <UUID>
+#+end_src
