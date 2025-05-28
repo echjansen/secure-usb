@@ -211,6 +211,17 @@ class Shell:
 
             returncode = process.returncode
 
+            # Log the command itself
+            self.log.info(f"Command: {command}")
+
+            # Log stdout
+            if stdout_str:
+                self.log.info(f"Command - stdout: {stdout_str}")
+
+            # Log stderr
+            if stderr_str:
+                self.log.info(f"Command - stderr: {stderr_str}")
+
             if self.debug:
                 output_panel = Panel(
                     Text.assemble(

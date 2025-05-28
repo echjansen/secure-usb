@@ -2,25 +2,32 @@
 This script creates a Secure USB backup device for use on any computer.
 The script installs a minimal Linux OS to boot from, or alternatively mount the included storage partition on your personal  Linux computer.
 
+** Goals
+
+- Be able to store data on the device (obviously...)
+- Data must be encrypted so that *only you* can read it
+- The USB device must be bootable to access encrypted data on any physical computer you have access to
+- If the USB device is lost and someone plugs it in its own computer, contact details must be readable
+- Using the device must be seamless, we already have a hardened setup [[https://github.com/echjansen/secure-arch][(secure-arch]]), we don't want to bother having to type another password
+
 ** Features
 - Secure USB Backup device
-- LUKS encryption
-- BTRFS storage partition
-- Linux OS included
-- Boot from included OS on any computer
-- Mount storage partition on personal computer
-- Encryption password is user password
+- Secure Linux OS included
+- LUKS encryption *Linux* and *Storage*
+- BTRFS storage partition (for snapshots)
+- Boots on any computer with a USB from included Linux
+- Mount storage partition on personal computer automatically
 
 ** Requirements
 - USB device (minimal 15GB)
 - Linux computer to execute this script
-- Internet connection to create the Secure USB
+- Internet connection to download Linux packages to create the Secure USB
 
 ** Partitioning
-1. README
-2. EFI
-3. LINUX
-4. STORAGE
+1. Partition 1: FAT32 (README) partition which contains a README.txt with contact details in case the USB key is lost
+2. Partition 2: EFI (EFI) partition with Microsoft signed bootloader (to access your data from any physical computer you have access to)
+3. Partition 3: LUKS (LINUX) encrypted partition which contains a minimal Linux install to access your data from any computer
+4. Partition 4: LUKS (STORAGE )encrypted partition which will contain all your data
 
 ** Creating a Secure USB Backup device
 To create a secure USB backup device execute the following commands on a linux operating system, after inserting your USB device in the computer.
@@ -47,6 +54,15 @@ There are two options to use the Secure USB Backup device:
 To mount the storage partition:
 
 #+begin_src shell
-  lsblk                           # To determine the correct drive. Storage is the 4th partition
-  sudo cryptsetup open <UUID>
+  lsblk                                       # To determine the correct drive. Storage is the 4th partition
+  sudo blkid </dev/PARTITION>                 # To get block id
+  sudo cryptsetup open </dev/partiton> <UUID> # Opens the crypt
+  sudo mount </dev/partiton/uuid> /mnt        # Mount on /mnt
+#+end_src
+
+To un-mount the storage partition:
+
+#+begin_src shell
+  sudo umount /mnt                            # Mount on /mnt
+  sudo cryptsetup close <UUID>                # Opens the crypt
 #+end_src

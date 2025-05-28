@@ -30,6 +30,9 @@ if __name__ == "__main__":
     os.environ["PART2_UUID"] = ""
     os.environ["PART3_UUID"] = ""
     os.environ["PART4_UUID"] = ""
+    os.environ["SYSTEM_LOCALE"] = ""
+    os.environ["SYSTEM_KEYB"] = ""
+    os.environ["SYSTEM_TIMEZONE"] = ""
 
     # set environment variables 'constants'
     os.environ['PART1_LABEL']  = "README"
@@ -45,7 +48,7 @@ if __name__ == "__main__":
 
     system = System(debug=DEBUG)
     system.check_sudo()
-    system.check_pacman(['dialog', 'python-rich', 'debootstrap', 'gptfdisk'])
+    #TODO system.check_pacman(['dialog', 'python-rich', 'debootstrap', 'gptfdisk'])
 
 #-- Create Objects ------------------------------------------------------------
 
@@ -63,11 +66,14 @@ if __name__ == "__main__":
 #-- User input ----------------------------------------------------------------
 
     # Get user variables
-    if not os.environ.get('DEVICE'):      os.environ['DEVICE']      = userentry.configure_drive()
-    if not os.environ.get('DEVICE_NAME'): os.environ['DEVICE_NAME'] = userentry.configure_hostname('Secure-USB').lower()
-    if not os.environ.get('DEVICE_WIPE'): os.environ['DEVICE_WIPE'] = userentry.run_yesno_str("Hard drive", "Wipe the entire drive (lengthy)")
-    if not os.environ.get('USER_NAME'):   os.environ['USER_NAME']   = userentry.configure_username()
-    if not os.environ.get('USER_PASS'):   os.environ['USER_PASS']   = userentry.configure_userpassword()
+    if not os.environ.get('DEVICE'):          os.environ['DEVICE']          = userentry.configure_drive()
+    if not os.environ.get('DEVICE_NAME'):     os.environ['DEVICE_NAME']     = userentry.configure_hostname('Secure-USB').lower()
+    if not os.environ.get('DEVICE_WIPE'):     os.environ['DEVICE_WIPE']     = userentry.run_yesno_str("Hard drive", "Wipe the entire drive (lengthy)")
+    if not os.environ.get('USER_NAME'):       os.environ['USER_NAME']       = userentry.configure_username()
+    if not os.environ.get('USER_PASS'):       os.environ['USER_PASS']       = userentry.configure_userpassword()
+    if not os.environ.get('SYSTEM_LOCALE'):   os.environ['SYSTEM_LOCALE']   = userentry.configure_locale()
+    if not os.environ.get('SYSTEM_KEYB'):     os.environ['SYSTEM_KEYB']     = userentry.configure_keyboard()
+    if not os.environ.get('SYSTEM_TIMEZONE'): os.environ['SYSTEM_TIMEZONE'] = userentry.configure_timezone()
 
 #-- User validation -----------------------------------------------------------
     console.print(Rule("Installation selections"), style='success')
@@ -91,6 +97,21 @@ if __name__ == "__main__":
         console.print(f'User name:......... [green]{os.environ.get('USER_NAME')}[/]', style='info')
     else:
         console.print('No user name selected.', style='critical')
+
+    if os.environ.get('SYSTEM_LOCALE'):
+        console.print(f'System locale:..... [green]{os.environ.get('SYSTEM_LOCALE')}[/]', style='info')
+    else:
+        console.print('No system locale selected.', style='critical')
+
+    if os.environ.get('SYSTEM_KEYB'):
+        console.print(f'System keyboard:... [green]{os.environ.get('SYSTEM_KEYB')}[/]', style='info')
+    else:
+        console.print('No system keyboard selected.', style='critical')
+
+    if os.environ.get('SYSTEM_TIMEZONE'):
+        console.print(f'System timezone:... [green]{os.environ.get('SYSTEM_TIMEZONE')}[/]', style='info')
+    else:
+        console.print('No system timezone selected.', style='critical')
 
     if prompt.ask('\nAre these selections correct, and continue installation?', choices=['y', 'n']) == 'n':
         exit()
@@ -181,7 +202,7 @@ if __name__ == "__main__":
     # Mount linux partition
     shell.execute('Partition 3 - Mount {PART3_LABEL}', 'mount /dev/mapper/{PART3_UUID} /mnt')
 
-    # Install Debian
+    # Install Debian (add the --foreign option if the host is different from the target)
     shell.execute('Linux - Install Linux Debian', 'debootstrap --arch amd64 --components main,contrib,non-free-firmware stable /mnt http://ftp.us.debian.org/debian')
 
     # Mount resources
@@ -196,6 +217,14 @@ if __name__ == "__main__":
     shell.execute('Linux - Set hosts',      'echo "127.0.0.1 {DEVICE_NAME}" | tee -a /mnt/etc/hosts')
     shell.execute('Linux - Set motd',       'echo | tee /mnt/etc/motd')
     shell.execute('Linux - Set repository', 'echo "deb http://security.debian.org/ stable-security main contrib non-free-firmware" | tee -a /mnt/etc/apt/sources.list')
+
+    # shell.execute('Set the system font to "$SYSTEM_FONT"', 'echo "FONT=$SYSTEM_FONT" >/mnt/etc/vconsole.conf')
+    # shell.execute('Set the hostname to $SYSTEM_HOSTNAME', 'echo "$SYSTEM_HOSTNAME" >/mnt/etc/hostname')
+
+    shell.execute('Set the system keyboard to {SYSTEM_KEYB}"', 'echo "KEYMAP={SYSTEM_KEYB}" >>/mnt/etc/vconsole.conf')
+    shell.execute('Set the language to {SYSTEM_LOCALE}', 'echo "{SYSTEM_LOCALE}" >>/mnt/etc/locale.gen')
+    shell.execute('Set the timezone to {SYSTEM_TIMEZONE}', 'ln -sf /usr/share/zoneinfo/{SYSTEM_TIMEZONE} /mnt/etc/localtime')
+    shell.execute('Generate locale', '{LINUX_ENV} chroot /mnt bash --login -c "locale-gen"')
 
     # Update Linux repositories
     shell.execute('Linux - Update repositories', '{LINUX_ENV} chroot /mnt bash --login -c "apt-get update && apt-get upgrade -y"')
